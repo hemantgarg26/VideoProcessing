@@ -5,6 +5,7 @@ import time
 from app.core.config import settings
 from app.utils.logger import get_logger
 from app.api.health import router as health_router
+from app.api.video_processing import router as video_processing_router
 
 logger = get_logger("main")
 
@@ -52,7 +53,19 @@ async def log_requests(request: Request, call_next):
     return response
 
 # Include Routers
-app.include_router(health_router, prefix="/videoProcessing/health")
+app.include_router(health_router, prefix="/api/health")
+app.include_router(video_processing_router, prefix="/api/video")
+
+'''
+    DB Setup
+'''
+@app.on_event("startup")
+async def startup_event():
+    await connect_to_mongo()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await close_mongo_connection()
 
 @app.get("/")
 async def root():

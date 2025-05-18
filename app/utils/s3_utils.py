@@ -1,8 +1,8 @@
 from fastapi import FastAPI, File, UploadFile
 from pydantic import BaseModel
 from typing import Annotated
-from api.dtos.error_success_codes import ErrorAndSuccessCodes
-from api.core.config import settings
+from app.dtos.error_success_codes import ErrorAndSuccessCodes
+from app.core.config import settings
 
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError

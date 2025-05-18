@@ -1,10 +1,10 @@
-from api.dto.video_processing_dtos import VideoProcessingRequest
-from api.utils.request_validations import validate_rate_limit, validate_file_type
-from api.dtos.error_success_code import ErrorAndSuccessCodes
-from api.dtos.collection_names import CollectionNames
-from api.utils.db_query import MongoQueryApplicator
-from api.constant.video_constants import VideoStatus
-from api.utils.s3_utils import upload_video_to_s3
+from app.dto.video_processing_dtos import VideoProcessingRequest
+from app.utils.request_validations import validate_rate_limit, validate_file_type
+from app.dtos.error_success_code import ErrorAndSuccessCodes
+from app.dtos.collection_names import CollectionNames
+from app.utils.db_query import MongoQueryApplicator
+from app.constant.video_constants import VideoStatus
+from app.utils.s3_utils import upload_video_to_s3
 
 from datetime import datetime
 

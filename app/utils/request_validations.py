@@ -1,10 +1,10 @@
 from fastapi import File, UploadFile
 from typing import Annotated
-from api.dtos.error_success_codes import ErrorAndSuccessCodes
-from api.dtos.collection_names import CollectionNames
+from app.dtos.error_success_codes import ErrorAndSuccessCodes
+from app.dtos.collection_names import CollectionNames
 from datetime import datetime
-from api.utils.db_query import MongoQueryApplicator
-from api.core.config import settings
+from app.utils.db_query import MongoQueryApplicator
+from app.core.config import settings
 
 
 def validate_rate_limit(user_id : str) -> ErrorAndSuccessCodes:

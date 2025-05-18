@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File, UploadFile
 from pydantic import BaseModel
 from typing import Annotated
-from api.dtos.error_success_codes import ErrorAndSuccessCodes
+from app.dtos.error_success_code import ErrorAndSuccessCodes
 
 
 class VideoProcessingResponse(BaseModel):

@@ -4,8 +4,8 @@ import time
 
 from app.core.config import settings
 from app.utils.logger import get_logger
-from app.api.health import router as health_router
-from app.api.video_processing import router as video_processing_router
+from app.health import router as health_router
+from app.video_processing import router as video_processing_router
 
 logger = get_logger("main")
 

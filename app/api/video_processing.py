@@ -2,7 +2,7 @@ from fastapi import APIRouter, status
 from pydantic import BaseModel
 from app.core.config import settings
 from app.utils.logger import get_logger
-from api.dtos.video_processing_dtos import VideoProcessingResponse, VideoProcessingRequest
+from app.dtos.video_processing_dtos import VideoProcessingResponse, VideoProcessingRequest
 
 logger = get_logger("video_processing")
 

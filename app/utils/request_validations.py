@@ -1,13 +1,12 @@
 from fastapi import File, UploadFile
-from typing import Annotated
-from app.dtos.error_success_codes import ErrorAndSuccessCodes
+from app.dtos.error_success_code import ErrorAndSuccessCodes
 from app.dtos.collection_names import CollectionNames
 from datetime import datetime
 from app.utils.db_query import MongoQueryApplicator
 from app.core.config import settings
 
 
-def validate_rate_limit(user_id : str) -> ErrorAndSuccessCodes:
+async def validate_rate_limit(user_id : str) -> ErrorAndSuccessCodes:
     """
         Validate the rate limit for the incoming request.
         This function checks if the request exceeds the allowed rate limit.
@@ -20,11 +19,11 @@ def validate_rate_limit(user_id : str) -> ErrorAndSuccessCodes:
     end_of_date = datetime.now().replace(hour=23, minute=59, second=59, microsecond=999999)
 
     # Check the number of files created today, if it exceeds the limit, return error
-    mongo = MongoQueryApplicator(CollectionNames.VIDEOS)
+    mongo = MongoQueryApplicator(CollectionNames.VIDEOS.value)
     
     # Build your query dict dynamically
-    videos = mongo.find({"created_at" : {"$gte" : start_of_day, "$lte" : end_of_date}})
-    if videos and len(videos) > settings.GLOBAL_VIDEO_RATE_LIMITING:
+    videos = await mongo.find({"created_at" : {"$gte" : start_of_day, "$lte" : end_of_date}})
+    if videos and len(videos) >= settings.GLOBAL_VIDEO_RATE_LIMITING:
         return ErrorAndSuccessCodes.GLOBAL_RATE_LIMIT_EXHAUSTED
     
     user_videos = []
@@ -32,13 +31,13 @@ def validate_rate_limit(user_id : str) -> ErrorAndSuccessCodes:
         if video.get('user_id') == user_id:  # Not using video['user_id'] to avoid KeyError
             user_videos.append(video)
     
-    if len(user_videos) > settings.USER_VIDEO_RATE_LIMITING:
+    if len(user_videos) >= settings.USER_VIDEO_RATE_LIMITING:
         return ErrorAndSuccessCodes.USER_RATE_LIMIT_EXHAUSTED
 
     return ErrorAndSuccessCodes.SUCCESS
     
 
-def validate_file_type(video_file: Annotated[UploadFile, File(...)]) -> ErrorAndSuccessCodes:
+def validate_file_type(video_file:UploadFile = File(...)) -> ErrorAndSuccessCodes:
     """
     Validate the file type of the uploaded video.
     This function checks if the file type is allowed.

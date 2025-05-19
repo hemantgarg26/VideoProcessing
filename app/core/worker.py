@@ -1,7 +1,9 @@
 from app.core.config import settings
+from app.utils.logger import get_logger
 
 from celery import Celery
 from celery.result import AsyncResult
+logger = get_logger("worker")
 
 celery = Celery(
     'worker',
@@ -18,6 +20,7 @@ def process_video_task(task_id : str):
         4. Store the S3 URLs of the processed video and thumbnail in the database
         5. Update the task status in the database
     '''
+    logger.info(f"Starting Processing Video Task : {task_id}")
     return "Complete"
 
 '''

@@ -1,20 +1,23 @@
-from app.dto.video_processing_dtos import VideoProcessingRequest
 from app.utils.request_validations import validate_rate_limit, validate_file_type
 from app.dtos.error_success_code import ErrorAndSuccessCodes
 from app.dtos.collection_names import CollectionNames
 from app.utils.db_query import MongoQueryApplicator
-from app.constant.video_constants import VideoStatus
+from app.constants.video_constants import VideoStatus
 from app.utils.s3_utils import upload_video_to_s3
-from app.tasks.celery_tasks import process_video_task
+from app.core.worker import process_video_task
+from app.utils.logger import get_logger
 
 from datetime import datetime
+from bson import ObjectId
 
-async def process_video(input : VideoProcessingRequest):
+logger = get_logger("video_processing")
+
+async def process_video(input) -> dict:
     """
     Process the video file and return the task ID.
     
     Args:
-        input (VideoProcessingRequest): The video processing request containing user ID and video file.
+        input ({user_id : str, video_file : UploadFile}): The video processing request containing user ID and video file.
     
     Processing Steps : 
     1. Validates if there is limit available at the global level to upload the file (Rate Limiting : Check 1)
@@ -28,58 +31,75 @@ async def process_video(input : VideoProcessingRequest):
     Returns:
         str: The task ID for tracking the processing status.
     """
-    
-    # Rate Limit Validation
-    rate_limit_check = validate_rate_limit(input.get('user_id'))
-    if rate_limit_check != ErrorAndSuccessCodes.SUCCESS:
-        return {
-            'status': rate_limit_check
-        }
-    
-    # File Type Validation
-    file_type_check = validate_file_type(input.get('video_file'))
-    if file_type_check != ErrorAndSuccessCodes.SUCCESS:
-        return {
-            'status': file_type_check
-        }
-    
-    # Mongo Record Creation
-    mongo = MongoQueryApplicator(CollectionNames.VIDEOS)
-    task_id = await mongo.insert_one({
-        'user_id': input.get('user_id'),
-        'status': VideoStatus.SAVED,
-        'created_at': datetime.now(),
-        'updated_at': datetime.now(),
-    })
+    mongo = None
+    task_id = None
 
-    '''
-        NOTE : When we have a client, the flow can start as async from here
-        Since we are not having a client and only a backend system, we will upload the file in sync, and send the task_id for further processing in async
-    '''
-    # Upload File to S3
-    s3_url = await upload_video_to_s3(input.get('video_file'))
+    try:
+        # Rate Limit Validation
+        rate_limit_check = await validate_rate_limit(input.get('user_id'))
+        logger.info(f"Rate Limit Check : {rate_limit_check.value}")
+        if rate_limit_check != ErrorAndSuccessCodes.SUCCESS:
+            return {
+                'status': rate_limit_check
+            }
+        
+        # File Type Validation
+        file_type_check = validate_file_type(input.get('video_file'))
+        if file_type_check != ErrorAndSuccessCodes.SUCCESS:
+            return {
+                'status': file_type_check
+            }
+        
+        # Mongo Record Creation
+        mongo = MongoQueryApplicator(CollectionNames.VIDEOS.value)
+        task_id = await mongo.insert_one({
+            'user_id': input.get('user_id'),
+            'status': VideoStatus.SAVED.value,
+            'created_at': datetime.now(),
+            'updated_at': datetime.now(),
+        })
 
-    '''
-        Push to Celery for processing
-    '''
-    task = CeleryTaskQueue(task_id)
-    
-    mongo.find_one_and_update(
-        {"_id" :task_id},
-        {
-            "$set" : {
+        '''
+            NOTE : When we have a client, the flow can start as async from here
+            Since we are not having a client and only a backend system, we will upload the file in sync, and send the task_id for further processing in async
+        '''
+        # Upload File to S3
+        s3_url = await upload_video_to_s3(input.get('video_file'))
+
+        '''
+            Push to Celery for processing
+        '''
+        task = CeleryTaskQueue().process_video(task_id)
+        
+        mongo_res = await mongo.find_one({"_id" : ObjectId(task_id)})
+        print(mongo_res, "Mongo Result")
+
+        await mongo.update_one(
+            {"_id" :ObjectId(task_id)},
+            {
                 's3_url' : s3_url,
-                'status' : VideoStatus.PROCESSING,
+                'status' : VideoStatus.PROCESSING.value,
                 'task_queue_id' : task.id,
                 'updated_at' : datetime.now()
             }
-        }
-    )
+        )
 
-    return {
-        'task_id': task_id,
-        'status' : ErrorAndSuccessCodes.SUCCESS
-    }
+        return {
+            'task_id': task_id,
+            'status' : ErrorAndSuccessCodes.SUCCESS
+        }
+    except Exception as e:
+        logger.error(f"Error while processing Video : {e}")
+        if mongo and task_id:
+            await mongo.update_one(
+                {"_id" :ObjectId(task_id)},
+                {
+                    'status' : VideoStatus.FAILED.value,
+                }
+        )
+        return {
+            'status' : ErrorAndSuccessCodes.PROCESSING_ERROR
+        }
 
 
 '''

@@ -63,6 +63,7 @@ app.include_router(video_processing_router, prefix="/api/video")
 @app.on_event("startup")
 async def startup_event():
     await connect_to_mongo()
+    logger.info("Connected to MongoDB")
 
 @app.on_event("shutdown")
 async def shutdown_event():

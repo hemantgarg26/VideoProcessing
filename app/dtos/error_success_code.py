@@ -14,3 +14,6 @@ class ErrorAndSuccessCodes(Enum):
     # Processing Status
     FILE_UNDER_PROCESSING = 7
     FILE_PROCESSING_FAILED = 8
+
+    #Error
+    PROCESSING_ERROR = 9

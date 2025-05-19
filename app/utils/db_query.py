@@ -1,6 +1,6 @@
 # services/query_applicator.py
 from typing import Any, Dict, List, Optional
-from api.utils.db_connect import mongodb
+from app.utils.db_connect import mongodb
 
 class MongoQueryApplicator:
     def __init__(self, collection_name: str):

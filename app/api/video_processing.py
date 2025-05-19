@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from app.core.config import settings
 from app.utils.logger import get_logger
 from app.dtos.video_processing_dtos import VideoProcessingResponse, VideoProcessingRequest
+from app.core.video_processing_service import process_video
 
 logger = get_logger("video_processing")
 

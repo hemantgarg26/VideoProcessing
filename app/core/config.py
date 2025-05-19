@@ -20,6 +20,10 @@ class Settings(BaseModel):
     
     VIDEO_UPLOAD_S3_BUCKET : str = get_key(".env", "VIDEO_UPLOAD_S3_BUCKET")
 
+    # Celery
+    BROKER_URL : str = get_key(".env", "BROKER_URL")
+    BACKEND_URL : str = get_key(".env", "BACKEND_URL") 
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

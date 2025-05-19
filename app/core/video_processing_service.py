@@ -5,6 +5,7 @@ from app.dtos.collection_names import CollectionNames
 from app.utils.db_query import MongoQueryApplicator
 from app.constant.video_constants import VideoStatus
 from app.utils.s3_utils import upload_video_to_s3
+from app.tasks.celery_tasks import process_video_task
 
 from datetime import datetime
 
@@ -42,7 +43,7 @@ async def process_video(input : VideoProcessingRequest):
             'status': file_type_check
         }
     
-    # Mongo Creation
+    # Mongo Record Creation
     mongo = MongoQueryApplicator(CollectionNames.VIDEOS)
     task_id = await mongo.insert_one({
         'user_id': input.get('user_id'),
@@ -57,6 +58,11 @@ async def process_video(input : VideoProcessingRequest):
     '''
     # Upload File to S3
     s3_url = await upload_video_to_s3(input.get('video_file'))
+
+    '''
+        Push to Celery for processing
+    '''
+    task = CeleryTaskQueue(task_id)
     
     mongo.find_one_and_update(
         {"_id" :task_id},
@@ -64,6 +70,7 @@ async def process_video(input : VideoProcessingRequest):
             "$set" : {
                 's3_url' : s3_url,
                 'status' : VideoStatus.PROCESSING,
+                'task_queue_id' : task.id,
                 'updated_at' : datetime.now()
             }
         }
@@ -73,6 +80,14 @@ async def process_video(input : VideoProcessingRequest):
         'task_id': task_id,
         'status' : ErrorAndSuccessCodes.SUCCESS
     }
+
+
+'''
+    Implementation for Celery Task Queue
+'''
+class CeleryTaskQueue:
+    def process_video(self, task_id):
+        return process_video_task.delay(task_id)
     
     
     

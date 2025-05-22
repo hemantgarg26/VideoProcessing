@@ -6,12 +6,21 @@ from app.constants.video_constants import VideoStatus
 from app.utils.s3_utils import upload_video_to_s3
 from app.core.worker import process_video_task
 from app.utils.logger import get_logger
+from app.dtos.video_processing_dtos import TaskList
 
 from datetime import datetime
 from bson import ObjectId
+from typing import List
 
 logger = get_logger("video_processing")
 
+'''
+    Implementation for Celery Task Queue
+'''
+class CeleryTaskQueue:
+    def process_video(self, task_id):
+        return process_video_task.delay(task_id)
+    
 async def process_video(input) -> dict:
     """
     Process the video file and return the task ID.
@@ -97,14 +106,52 @@ async def process_video(input) -> dict:
         return {
             'status' : ErrorAndSuccessCodes.PROCESSING_ERROR
         }
+    
 
+async def get_tasks(user_id, task_id) -> List[TaskList]: 
+    try:
+        query = {"user_id" : user_id}
+        if task_id:
+            query["_id"] = ObjectId(task_id)
+        mongo = MongoQueryApplicator(CollectionNames.VIDEOS.value)
+        tasks = await mongo.find(query)
 
-'''
-    Implementation for Celery Task Queue
-'''
-class CeleryTaskQueue:
-    def process_video(self, task_id):
-        return process_video_task.delay(task_id)
+        if not tasks or len(tasks) == 0:
+            logger.info(f"No Tasks Found User Id : {user_id}")
+            return []
+        
+        res : List[TaskList] = []
+        for v in tasks:
+            task : TaskList = {
+                'status' : v.get('status'),
+                'thumbnail' : v.get('thumbnail'),
+                'output' : v.get('output_video'),
+            }
+            res.append(task)
+        return res
+    except Exception as e:
+        logger.error(f"Error while fetching task : {e}, USER ID: {user_id}, TASK ID: {task_id}")
+        return []
+    
+async def get_task_details(task_id : str, type : str) -> str: 
+    try:
+        query = {"_id" : ObjectId(task_id)}
+        mongo = MongoQueryApplicator(CollectionNames.VIDEOS.value)
+        task = await mongo.find_one(query)
+
+        if not task:
+            logger.info(f"No Tasks Found Task Id : {task_id}")
+            return ""
+        
+        if type == "thumbnail":
+            return task.get('thumbnail') or ""
+        elif type == "progress":
+            return task.get('status') or ""
+        else:
+            return ""
+    except Exception as e:
+        logger.error(f"Error while fetching task details : {e}, TASK ID: {task_id}")
+        return ""
     
     
     

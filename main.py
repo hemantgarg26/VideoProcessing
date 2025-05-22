@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.utils.logger import get_logger
 from app.api.health import router as health_router
 from app.api.video_processing import router as video_processing_router
-from app.utils.db_connect import connect_to_mongo, close_mongo_connection
+from app.utils.db_connect import mongodb
 
 logger = get_logger("main")
 
@@ -62,12 +62,12 @@ app.include_router(video_processing_router, prefix="/api/video")
 '''
 @app.on_event("startup")
 async def startup_event():
-    await connect_to_mongo()
+    await mongodb.connect()
     logger.info("Connected to MongoDB")
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    await close_mongo_connection()
+    await mongodb.close()
 
 @app.get("/")
 async def root():

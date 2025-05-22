@@ -66,24 +66,21 @@ async def process_video(input) -> dict:
         # Upload File to S3
         s3_url = await upload_video_to_s3(input.get('video_file'))
 
-        '''
-            Push to Celery for processing
-        '''
-        task = CeleryTaskQueue().process_video(task_id)
-        
-        mongo_res = await mongo.find_one({"_id" : ObjectId(task_id)})
-        print(mongo_res, "Mongo Result")
-
         await mongo.update_one(
             {"_id" :ObjectId(task_id)},
             {
                 's3_url' : s3_url,
                 'status' : VideoStatus.PROCESSING.value,
-                'task_queue_id' : task.id,
                 'updated_at' : datetime.now()
             }
         )
 
+        '''
+            Push to Celery for processing
+            Returns a task_id
+        '''
+        CeleryTaskQueue().process_video(task_id)
+        
         return {
             'task_id': task_id,
             'status' : ErrorAndSuccessCodes.SUCCESS

@@ -1,6 +1,9 @@
 # Use the official Python image as the base image
 FROM python:3.9-slim
 
+# Install system dependencies including ffmpeg
+RUN apt-get update && apt-get install -y ffmpeg && apt-get clean
+
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \

@@ -24,8 +24,10 @@
 ```bash uvicorn main:app --reload```
 
 ## For Local Testing
+Install ffmpeg4 on your local machine : macOs ```brew install ffmpeg```, Windows : ```choco install ffmpeg```
 Start Redis Container in a different terminal ```docker run -p 6379:6379 redis```
 Start Celery task Queue in a different terminal ```celery -A app.core.worker.celery worker --loglevel=info```
+Replace BROKER_URL=`redis://localhost:6379/0` and BACKEND_URL=`redis://localhost:6379/0` in .env
 
 
 The application will start at `http://127.0.0.1:8000`

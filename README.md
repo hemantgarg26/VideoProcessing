@@ -79,13 +79,12 @@ The application will start at `http://127.0.0.1:8000`
 ```
 
 Key Notes
-1. Circular Dependency Handling: core/video_processing_service.py and core/celery_core.py are kept separate to isolate FastAPI and Celery logic and avoid circular imports.
-2. DTOs: Centralized under dtos/ to ensure consistency of request/response schema and avoid duplicating validation logic.
-3. Environment Separation: config.py under core/ loads and manages all environment-specific variables on application start. (Preventing fetch repeatedly from env file (Operational Overhead prevention))
-4. DB Access: Utilities for database interaction are split into:
+1. DTOs: Centralized under dtos/ to ensure consistency of request/response schema and avoid duplicating validation logic.
+2. Environment Separation: config.py under core/ loads and manages all environment-specific variables on application start. (Preventing fetch repeatedly from env file (Operational Overhead prevention))
+3. DB Access: Utilities for database interaction are split into:
   db_connect.py (used in main app – synchronous)
   db_connect via Celery tasks (handled differently due to async-sync incompatibilities)
-5. Celery Tasks: worker.py sets up the Celery worker and broker configuration, while celery_core.py runs background processing tasks. (Async Context maintained vai asyncio)
+4. Celery Tasks: worker.py sets up the Celery worker and broker configuration, while celery_core.py runs background processing tasks. (Async Context maintained vai asyncio)
 
 🔧 Suggested Improvements
 1. Unit Tests Directory: Add a tests/ directory to manage automated tests (pytest, unittest, etc.).
@@ -180,6 +179,7 @@ tests/
 5. Using asyncio in celery worker - Celery is Synchronous by nature and does not support FastAPIs async-await. Using asyncio.get_event_loop() and asyncio.new_event_loop(), preventing asyncio to close event loops on a single operation. (Without this, only one request will be processed, the next request will get an error - ```Event Loop Closed```)
 6. Custom Success and Error codes at the application level for proper error messaging to user.
 7. Saving status (Saved, Processing, Processed, Failed), for each task in mongoDb.
+8. Created an API for fetching task status, Can be extended to use sockets.
 
 # Swagger Docs
 ![alt text](SwaggerDocumentation.png)

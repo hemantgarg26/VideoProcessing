@@ -32,6 +32,7 @@ Replace BROKER_URL=`redis://localhost:6379/0` and BACKEND_URL=`redis://localhost
 The application will start at `http://127.0.0.1:8000`
 - Health check: `http://localhost:8000/api/health/check`
 - Check Application is running or not: `http://localhost:8000/`
+- Docs: ```http://localhost:8000/docs```
 
 ## Project Structure
 
@@ -176,3 +177,6 @@ tests/
 5. Using asyncio in celery worker - Celery is Synchronous by nature and does not support FastAPIs async-await. Using asyncio.get_event_loop() and asyncio.new_event_loop(), preventing asyncio to close event loops on a single operation. (Without this, only one request will be processed, the next request will get an error - ```Event Loop Closed```)
 6. Custom Success and Error codes at the application level for proper error messaging to user.
 7. Saving status (Saved, Processing, Processed, Failed), for each task in mongoDb.
+
+# Swagger Docs
+![alt text](SwaggerDocumentation.png)

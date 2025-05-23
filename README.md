@@ -35,7 +35,7 @@ The application will start at `http://127.0.0.1:8000`
 - Docs: ```http://localhost:8000/docs```
 
 ## Project Structure
-
+```
 ├── app/
 │   ├── api/                          # API endpoints for external interaction
 │   │   ├── health.py                 # Health check endpoint
@@ -76,6 +76,7 @@ The application will start at `http://127.0.0.1:8000`
 ├── main.py                           # Entry point to start the FastAPI app
 ├── README.md                         # Project overview and documentation
 └── requirements.txt                  # Python dependencies
+```
 
 Key Notes
 1. Circular Dependency Handling: core/video_processing_service.py and core/celery_core.py are kept separate to isolate FastAPI and Celery logic and avoid circular imports.
@@ -88,12 +89,14 @@ Key Notes
 
 🔧 Suggested Improvements
 1. Unit Tests Directory: Add a tests/ directory to manage automated tests (pytest, unittest, etc.).
+```
 app/
 tests/
   ├── api/
   ├── core/
   ├── utils/
   └── conftest.py
+```
 2. Schemas Folder (optional): If DTOs become complex or large in number, consider separating request/response models into a schemas/ or models/ sub-package under app/.
 
 ## Tasks Completed

@@ -1,5 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 import time
 
 from app.core.config import settings
@@ -80,3 +83,16 @@ async def root():
         "message": f"Welcome to {settings.APP_NAME}",
         "version": settings.APP_VERSION
     } 
+
+# Serve Swagger UI using custom openapi.yaml
+@app.get("/docs", include_in_schema=False)
+async def custom_swagger_ui():
+    return get_swagger_ui_html(
+        openapi_url="./openapi.yaml",
+        title="Custom Video Processing Docs"
+    )
+
+# Serve the YAML file
+@app.get("/openapi.yaml", include_in_schema=False)
+async def openapi_yaml():
+    return FileResponse("openapi.yaml", media_type="application/yaml")

@@ -1,0 +1,94 @@
+openapi: 3.0.3
+info:
+  title: Video Processing API
+  version: 1.0.0
+  description: API documentation converted from Postman collection
+
+servers:
+  - url: http://localhost:8000
+
+paths:
+  /:
+    get:
+      summary: Check If Server is Running
+      responses:
+        '200':
+          description: OK
+
+  /api/health/check:
+    get:
+      summary: Health Check
+      responses:
+        '200':
+          description: OK
+
+  /api/video/upload:
+    post:
+      summary: Upload File
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                  example: "12345"
+                video_file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: File uploaded
+
+  /api/video/tasks:
+    get:
+      summary: Get All Tasks or Particular Task Status
+      parameters:
+        - name: user_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: task_id
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of tasks or status of specific task
+
+  /api/video/task:
+    get:
+      summary: Get Thumbnail or Task Progress
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [thumbnail, progress]
+        - name: task_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Thumbnail or Progress info
+
+  /api/video/analytics/queue:
+    get:
+      summary: Get Queue Status
+      responses:
+        '200':
+          description: Queue status
+
+  /api/video/analytics/system:
+    get:
+      summary: System Metrics
+      responses:
+        '200':
+          description: System metrics
